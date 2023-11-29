@@ -1,16 +1,30 @@
 import * as monaco from "monaco-editor";
-import { CharStreams, CommonTokenStream } from "antlr4ts";
-import { JSONLexer } from "../antlr/JSONLexer";
-import { JSONParser } from "../antlr/JSONParser";
+import { JSONTylasuParser } from "./ast/parser";
+import { Issue } from "@strumenta/tylasu";
 
 const editor = monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", fontSize: 22 });
+const parser = new JSONTylasuParser();
 
 editor.onDidChangeModelContent(() => {
     const code = editor.getValue();
-    const characters = CharStreams.fromString(code);
-    const lexer = new JSONLexer(characters);
-    const tokens = new CommonTokenStream(lexer);
-    const parser = new JSONParser(tokens);
-    const tree = parser.json();
-    console.log(tree);
+    const parsingResult = parser.parse(code);
+
+    visualizeIssues(parsingResult.issues);
 });
+
+function visualizeIssues(issues: Issue[]) {
+    const diagnostics: monaco.editor.IMarkerData[] = [];
+    for (const issue of issues) {
+        if (issue.position) {
+            diagnostics.push({
+                severity: monaco.MarkerSeverity.Error,
+                message: issue.message,
+                startLineNumber: issue.position.start.line,
+                startColumn: issue.position.start.column + 1,
+                endLineNumber: issue.position.end.line,
+                endColumn: issue.position.end.column + 1
+            });
+        }
+    }
+    monaco.editor.setModelMarkers(editor.getModel()!, "json", diagnostics);
+}
