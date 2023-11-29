@@ -5,3 +5,27 @@ body {
 #editor {
     height: 100vh;
 }
+
+.number-member {
+    color: plum !important;
+}
+
+.string-member {
+    color: burlywood !important;
+}
+
+.boolean-member {
+    color: cadetblue !important;
+}
+
+.null-member {
+    color: gray !important;
+}
+
+.object-member {
+    color: lightgreen !important;
+}
+
+.array-member {
+    color: lightsalmon !important;
+}
