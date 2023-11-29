@@ -1,5 +1,15 @@
 {
   "dependencies": {
     "monaco-editor": "^0.44.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.8",
+    "serve": "^14.2.1"
+  },
+  "scripts": {
+    "all": "npm install && npm run createDistribution && npm run bundle && npm run serve",
+    "createDistribution": "mkdir -p dist && cp src/main/resources/* dist",
+    "bundle": "esbuild src/main/typescript/index.ts --bundle --outfile=dist/bundle.js --loader:.ttf=empty",
+    "serve": "serve dist -p 3000"
   }
 }
