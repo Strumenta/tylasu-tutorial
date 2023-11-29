@@ -15,6 +15,8 @@ editor.onDidChangeModelContent(() => {
     visualizeIssues(parsingResult.issues);
 
     colorizeMembers(parsingResult.data);
+
+    applyMonacoConfiguration(parsingResult.data);
 });
 
 function visualizeIssues(issues: Issue[]) {
@@ -65,4 +67,45 @@ function colorizeMembers(root?: Node) {
         }
     }
     decorations = editor.deltaDecorations(decorations, newDecorations);
+}
+
+function applyMonacoConfiguration(root?: Node) {
+    let diagnostics: monaco.editor.IMarkerData[] = [];
+
+    const configuration = {
+        applyMonacoConfiguration: JSONBoolean,
+        fontSize: JSONNumber,
+        theme: JSONString,
+        lineNumbers: JSONBoolean
+    };
+
+    if (((root as JSONObject)?.members?.find(x => x.name === "applyMonacoConfiguration")?.value as JSONBoolean)?.value) {
+        for (const member of (root as JSONObject).members) {
+            if (!(member.name in configuration)) {
+                diagnostics.push({
+                    severity: monaco.MarkerSeverity.Error,
+                    message: "Unexpected configuration member",
+                    startLineNumber: member.position!.start.line,
+                    startColumn: member.position!.start.column + 2,
+                    endLineNumber: member.position!.start.line,
+                    endColumn: member.position!.start.column + 2 + member.name.length
+                });
+            }
+            else if (!(member.value instanceof configuration[member.name])) {
+                diagnostics.push({
+                    severity: monaco.MarkerSeverity.Error,
+                    message: "Unexpected member type",
+                    startLineNumber: member.value.position!.start.line,
+                    startColumn: member.value.position!.start.column + 2,
+                    endLineNumber: member.value.position!.start.line,
+                    endColumn: member.value.position!.start.column + 2 + member.name.length
+                });
+            }
+        }
+        monaco.editor.setModelMarkers(editor.getModel()!, "json", diagnostics);
+
+        if (!diagnostics.length) {
+            editor.updateOptions(JSON.parse(editor.getValue()));
+        }
+    }
 }
