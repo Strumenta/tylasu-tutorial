@@ -1,15 +1,19 @@
 {
   "dependencies": {
-    "monaco-editor": "^0.44.0"
+    "monaco-editor": "0.44.0",
+    "antlr4ts": "0.5.0-alpha.4",
+    "assert": "2.1.0"
   },
   "devDependencies": {
-    "esbuild": "^0.19.8",
-    "serve": "^14.2.1"
+    "esbuild": "0.19.8",
+    "serve": "14.2.1",
+    "antlr4ts-cli": "0.5.0-alpha.4"
   },
   "scripts": {
-    "all": "npm install && npm run createDistribution && npm run bundle && npm run serve",
+    "all": "npm install && npm run generateParser && npm run createDistribution && npm run bundle && npm run serve",
+    "generateParser": "antlr4ts -Dlanguage=TypeScript src/main/antlr/JSON.g4 -no-listener",
     "createDistribution": "mkdir -p dist && cp src/main/resources/* dist",
-    "bundle": "esbuild src/main/typescript/index.ts --bundle --outfile=dist/bundle.js --loader:.ttf=empty",
+    "bundle": "esbuild src/main/typescript/index.ts --bundle --outfile=dist/bundle.js --loader:.ttf=empty --define:process.env.NODE_DEBUG=false",
     "serve": "serve dist -p 3000"
   }
 }
