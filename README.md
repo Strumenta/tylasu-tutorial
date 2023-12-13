@@ -7,20 +7,16 @@ It has become the go-to format to represent data.
 Chances are that at some point, you have wanted to validate JSON data or ensure it contains all the information you expect.
 
 Some existing websites like [jsonlint] or [jsonformatter] offer you that.
-But have you ever wondered how you could build such a website?
-Of course, there are a million ways to do it. But choosing the right tools can make the task become easy, even fun.
+But have you ever wondered how you could build such a website? 
+Of course, there are a million ways to do it. But choosing the right tools can make the task easy, even fun.
 
-Here at Strumenta, we build all kind of tools, and data validators are no exception.
-In this tutorial, we will show you how to leverage the power of [Tylasu], [ANTLR] and [Monaco], all open source tools, to build a friendly JSON validator website.
-Here is what it looks like:
+Here at Strumenta, we build all kinds of tools related to languages, and data validators are no exception. In this tutorial, we will show you how to leverage the power of [Tylasu], [ANTLR], and [Monaco], all open-source tools, to build a friendly JSON validator website. Here is what it looks like:
 
 ![Colorized json](docs/image.png)
 
 You can play with it online at https://strumenta.github.io/tylasu-tutorial
 
-It is a website that looks and acts like an editor.
-Whenever you type on it, it parses the code expecting some JSON.
-It displays error markers over the conflicting code, and colors each member depending on the type of its value.
+It is a website that looks and acts like an editor. In fact, it’s based on the Monaco editor by Microsoft. Whenever you type on it, it parses the code expecting some JSON. It displays error markers over incorrect code, and colors each member depending on the type of its value.
 
 It even has a secret feature:
 If an `"applyMonacoConfiguration": true` member is present, the code will be interpreted as Monaco configuration and applied to the editor on the spot.
@@ -28,10 +24,10 @@ Try changing the font size or the editor's theme like this:
 
 ![editor configuration example](docs/image-2.png)
 
-The complete codebase is on [Github], with a dedicated commit for each of the 7 tutorial steps. Use them to check your progress or skip over steps completely.
+The complete codebase is on [Github], with a dedicated commit for each of the 7 tutorial steps. We can use them to check our progress or skip over steps completely.
 Everything ready? Let's start:
 
-## 1. Create the editor
+## 1. Creating the editor
 
 I am a huge believer in having something visual and interactive to play with as soon as possible.
 So let's start with the editor.
@@ -65,19 +61,18 @@ import * as monaco from "monaco-editor";
 monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", fontSize: 22 });
 ```
 
-The page has a single element `editor` that is styled to take up the whole viewport.
-The code creates a Monaco editor inside this element with a dark theme and a bigger font size.
-We will give the user the ability to customize the editor deeper on the tutorial.
+The page has a single element, `editor`, that is styled to take up the whole viewport.
+The code creates a Monaco editor inside this element with a dark theme and a bigger font size. We will give the user the ability to customize the editor later in the tutorial.
 
 Of course, we need to bundle the TypeScript code with its dependencies into the `bundle.js` and `bundle.css` that the HTML file is expecting.
 
-First, we install the `monaco-editor` node package as dependency:
+First, let's install the `monaco-editor` node package as dependency:
 
 ```shell
 $ npm install monaco-editor
 ```
 
-Then, we create the bundle executing the `esbuild` node package with `npx`:
+Then, we'll create the bundle executing the `esbuild` node package with `npx`:
 
 ```shell
 $ npx esbuild index.ts --bundle --outfile=bundle.js --loader:.ttf=empty
@@ -91,8 +86,7 @@ $ npx serve . -p 3000
 ```
 
 Now we can open a browser at http://localhost:3000 and enjoy typing some code.
-Developers that are familiar with VS Code can use the same keyboard shortcuts here.
-In fact, Microsoft created Monaco to serve as the editor in VS Code.
+Developers who are familiar with VS Code can use the same keyboard shortcuts here. In fact, Microsoft created Monaco to serve as the editor in VS Code.
 
 ![Editor on the browser](docs/image-1.png)
 
@@ -136,26 +130,24 @@ $ npm run all
 
 to serve the website with the latest changes applied.
 
-## 3. Parse the editor's code
+## 3. Parsing the Code in the Editor
 
 Let's provide some feedback depending on the code the user types in the editor.
 
-We will use ANTLR, an industry standard tool for language recognition.
-ANTLR is very powerful and can understand everything from small DSL programs to full C++ projects.
-To keep the example familiar to most developers, we will use it to parse JSON, but feel free to experiment with other languages.
+We will use ANTLR, an industry-standard tool for language recognition. ANTLR is very powerful and can understand everything from small DSL programs to full C++ projects. To keep the example familiar to most developers, we will use it to parse JSON, but feel free to experiment with other languages.
 
-ANTLR takes takes formal language grammars as input.
+ANTLR takes takes formal language grammars as input and produces the source code of a parser as output.
 Thankfully, the official ANTLR repository includes many grammars of popular languages ready to be used, including one for JSON.
 Let's say thanks and copy the [json grammar] into `src/main/antlr/JSON.g4`.
 
-For anyone curious about ANTLR grammars, we have [many resources available].
+For anyone curious about ANTLR parsers, we have [many resources available].
 
 ANTLR for TypeScript comes in two packages:
 * the `antlr4ts` package that we will use as a runtime dependency
 * the `antlr4ts-cli` devDependency that generates the TypeScript files that parse the given grammar
 
 Unfortunately, `antlr4ts` is not ready to be used on the browser out of the box.
-It expects to find node modules that do not exist in the browser like `fs`, `assert` and `process`.
+It expects to find node modules that do not exist in the browser like `fs`, `assert`, and `process`.
 Nothing we can't fix with some Javascript trickery:
 
 ```json
@@ -197,21 +189,19 @@ editor.onDidChangeModelContent(() => {
 });
 ```
 
-This is the standard pipeline for a parser. It reads the code from a character stream, the lexer transforms it to a stream of tokens and finally the parser transforms the tokens into a tree of structured content.
+This is the standard pipeline for a parser. It reads the code from a character stream, the lexer transforms it into a stream of tokens and finally the parser transforms the tokens into a tree of structured content.
 
 We should now see errors and parse trees printed on the browser's developer console. We can confirm that when the code is valid JSON we get no errors:
 
 ![Errors in devtools](docs/image-3.png)
 
-## 4. Visualize the issues over the code
+## 4. Showing issues over the code
 
 If you have played with the ANTLR parser, you may have noticed that neither the errors nor the resulting tree are very friendly.
 The trees are hard to mutate, and the nodes' information is tied to the grammar, rather than to what they represent.
 This is where our last piece comes in: [Tylasu].
 
-[Tylasu] is an open source package to create and process beautiful abstract syntax trees (ASTs for short).
-It provides utilities to model nodes, their relationships, and transformations between them.
-It simplifies the creation of parsers to enable the development of sophisticated language engineering tools on top, like compilers or editors.
+[Tylasu] s an open-source package to create and process beautiful abstract syntax trees (ASTs for short). It provides utilities to model nodes, their relationships, and transformations between them. It simplifies the creation of parsers to enable the development of sophisticated language engineering tools on top, like compilers or editors.
 
 Let's see how it can help us show friendly errors in the editor.
 First, we install the `@strumenta/tylasu` package and modify the `bundle` script one last time to enable proper browser support:
@@ -266,10 +256,7 @@ export class JSONTylasuParser extends TylasuParser<Node, JSONParser, JsonContext
 }
 ```
 
-It is basically a wrapper of the previous ANTLR parser code we had.
-However, it merges the result and the issues found in a nice ParsingResult object.
-We can remove the error listeners to no longer show them in the developer console.
-Instead, we will visualize them with Monaco right over the code, using the position information automatically provided by Tylasu:
+It is basically a wrapper of the previous ANTLR parser code we had. However, it merges the result and the issues found in a nice ParsingResult object. We can remove the error listeners to no longer show them in the developer console. Instead, we will visualize them with Monaco right over the code, using the position information automatically provided by Tylasu:
 
 ```typescript
 editor.onDidChangeModelContent(() => {
@@ -297,9 +284,7 @@ function visualizeIssues(issues: Issue[]) {
 }
 ```
 
-This could already work as a JSON validator website, but thanks to Tylasu, we can do much better.
-How about coloring each object member depending on its type?
-For that, we need a deeper understanding of the code.
+This could already work as a JSON validator website, but thanks to Tylasu, we can do much better. How about coloring each object member depending on its type? For that, we need a deeper understanding of the code.
 
 ## 5. Chisel the parse tree
 
@@ -344,7 +329,7 @@ export class JSONNull extends JSONValue { }
 ```
 
 The four literal value classes probably contain no surprises.
-They hold a value and provide a constructor for convinience.
+They hold a value and provide a constructor for convenience.
 The array and object nodes are a bit more interesting:
 
 ```typescript
@@ -413,8 +398,8 @@ transformer.registerNodeFactory(ValueContext, (x: ValueContext) => {
 });
 ```
 
-As before the four literal cases are simple.
-For nodes with children we need to specify how to convert teir children too:
+As before, the four literal cases are simple.
+For nodes with children, we need to specify how to convert their children too:
 
 ```typescript
 transformer.registerNodeFactory(ArrContext, (context: ArrContext) => new JSONArray()).withChild(
@@ -439,7 +424,7 @@ transformer.registerNodeFactory(PairContext, (context: PairContext) => new JSONM
 );
 ```
 
-With this information, the transformer will take care of walking all the tree and converting all the nodes.
+With this information, the transformer will take care of walking over the entire tree and converting all the nodes.
 We just need to invoke it in the `parseTreeToAST` method of the parser:
 
 ```typescript
@@ -449,8 +434,10 @@ protected parseTreeToAst(parseTreeRoot: JsonContext, considerPosition: boolean, 
 ```
 
 Now, `parser.parse` produces a tree with our ideal structure.
-It also includes types, position information, origin, destination and children relationships.
-Much nicer!
+Much nicer! It also includes types, position information, and child relationships. Also, each node has:
+* an “origin” that remembers where the node comes from – in our case, an ANTLR parse tree node corresponding to a portion of source code. In other cases, nodes may originate from other Tylasu nodes after an AST-to-AST transformation, or may have been created programmatically;
+* an optional “destination” node. When we apply multiple transformations, each intermediate node will also record what it’s been transformed into.
+
 
 ## 6. Colorize the members
 
@@ -459,7 +446,9 @@ To colorize the members, we can:
 * Walk the root node
 * Filter the `JSONMember` nodes
 * Pick a CSS class name depending on the type of its value
-* Create a Monaco decorator in the node's name's position with the selected class name
+* Create a Monaco decorator in the node's name's position with the selected class name.
+
+We can realize the above steps with the following function:
 
 ```typescript
 function colorizeMembers(root?: Node) {
@@ -527,10 +516,9 @@ We can customize their look in `index.css`:
 ```
 
 Here we have just modified the color, but nothing stops you from changing fonts, size, or anything really.
+In fact, in the following, we’ll give the user the ability to customize the fonts and the colors of the editor itself.
 
-Talking about fonts and colors, let's give the user the ability to customize the fonts and the colors of the editor:
-
-## 7. Add a little secret
+## 7. Let's add a little secret
 
 Programming should always stay fun.
 Let's take this chance to make the editor configurable on the spot by interpreting the inputted JSON as Monaco configuration.
@@ -582,13 +570,9 @@ function applyMonacoConfiguration(root?: Node) {
 }
 ```
 
-In this case, we only allow configuring the theme, the font size and whether the line numbers are displayed.
-But of course, we could take this idea much further.
-Maybe even support the entire JSON schema specification.
-Or maybe create completely different validation rules.
+In this case, we only allow configuring the theme, the font size, and whether the line numbers are displayed. But of course, we could take this idea much further. Maybe even support the entire JSON schema specification. Or maybe create completely different validation rules.
 
-The point is, once we have an AST that fits our mental model, we can create any tool on top of it.
-
+The point is, that once we have an AST that fits our mental model, we can create any tool on top of it.
 
 ## Conclusion
 
