@@ -14,7 +14,7 @@
     "all": "npm install && npm run generateParser && npm run createDistribution && npm run bundle && npm run serve",
     "generateParser": "antlr4ts -Dlanguage=TypeScript src/main/antlr/JSON.g4 -no-listener",
     "createDistribution": "mkdir -p dist && cp src/main/resources/* dist",
-    "bundle": "esbuild src/main/typescript/index.ts --bundle --outfile=dist/bundle.js --loader:.ttf=empty --define:process.env.NODE_DEBUG=false --external:fs && sed -i'' '13d' dist/bundle.js",
+    "bundle": "esbuild src/main/typescript/index.ts --bundle --outfile=dist/bundle.js --loader:.ttf=empty --define:process.env.NODE_DEBUG=false --external:fs && sed -i '' '13d' dist/bundle.js",
     "serve": "serve dist -p 3000"
   }
 }
